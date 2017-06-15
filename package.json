@@ -1,0 +1,34 @@
+{
+  "name": "file2html-fiction-book",
+  "version": "0.1.0",
+  "description": "FictionBook engine for file2html",
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
+  "scripts": {
+    "test": "./node_modules/.bin/jest --no-cache --config=./node_modules/file2html-dev-tools/jest/config.json",
+    "lint": "./node_modules/.bin/tslint \"src/**/*.ts\" \"test/unit/**/*.ts\"",
+    "build": "npm run lint && rm -rf lib && ./node_modules/.bin/tsc"
+  },
+  "dependencies": {
+  },
+  "devDependencies": {
+    "file2html": "git@github.com:file2html/file2html.git",
+    "file2html-dev-tools": "git@github.com:file2html/file2html-dev-tools.git",
+    "file2html-xml-tools": "git@github.com:file2html/file2html-xml-tools.git"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/file2html/file2html-fiction-book.git"
+  },
+  "keywords": [
+    "file2html",
+    "Fiction Book",
+    ".fb2"
+  ],
+  "author": "webschik",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/file2html/file2html-fiction-book/issues"
+  },
+  "homepage": "https://github.com/file2html/file2html-fiction-book#readme"
+}
