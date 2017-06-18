@@ -28,8 +28,23 @@ describe('FictionBook', () => {
                     name: '',
                     size: 37837
                 });
-                expect(file.getData().styles).toBe('<style></style>');
-                expect(file.getData().content).toBe('<div></div>');
+                const {styles, content} = file.getData();
+                let openedTagsCount: number = 0;
+                let closedTagsCount: number = 0;
+                const openedTagsPattern: RegExp = /<[a-zA-Z]+/g;
+                const closedTagsPattern: RegExp = /<\/[a-zA-Z]+/g;
+
+                while (openedTagsPattern.exec(content)) {
+                    openedTagsCount++;
+                }
+
+                while (closedTagsPattern.exec(content)) {
+                    closedTagsCount++;
+                }
+
+                expect(openedTagsCount).toBe(closedTagsCount);
+                expect(styles).toBe('<style></style>');
+                expect(content).toBe('<div></div>');
             });
         });
     });
