@@ -29,20 +29,33 @@ describe('FictionBook', () => {
                     size: 37837
                 });
                 const {styles, content} = file.getData();
-                let openedTagsCount: number = 0;
-                let closedTagsCount: number = 0;
-                const openedTagsPattern: RegExp = /<[a-zA-Z]+/g;
-                const closedTagsPattern: RegExp = /<\/[a-zA-Z]+/g;
 
-                while (openedTagsPattern.exec(content)) {
-                    openedTagsCount++;
+                function getTagsQuantity (content: string, pattern: RegExp) {
+                    const tagNames: {[key: string]: number} = {};
+                    let parseResult: string[] = [];
+
+                    while (parseResult) {
+                        const tagName: string = parseResult[1];
+
+                        if (tagName) {
+                            tagNames[tagName] = tagNames[tagName] || 0;
+                            tagNames[tagName]++;
+                        }
+
+                        parseResult = pattern.exec(content);
+                    }
+
+                    return tagNames;
                 }
 
-                while (closedTagsPattern.exec(content)) {
-                    closedTagsCount++;
-                }
+                const openedTags: {[key: string]: number} = getTagsQuantity(content, /<([a-zA-Z0-9]+)/g);
+                const closedTags: {[key: string]: number} = Object.assign(
+                    getTagsQuantity(content, /<\/([a-zA-Z0-9]+)/g),
+                    getTagsQuantity(content, /([a-zA-Z0-9]+)\/>/g)
+                );
 
-                expect(openedTagsCount).toBe(closedTagsCount);
+                expect(Object.keys(openedTags).length).toBeGreaterThan(0);
+                expect(openedTags).toEqual(closedTags);
                 expect(styles).toBe('<style></style>');
                 expect(content).toBe('<div></div>');
             });
