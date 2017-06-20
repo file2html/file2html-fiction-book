@@ -1,5 +1,5 @@
 import * as file2html from 'file2html';
-import bytesToString from 'file2html/lib/bytes-to-string';
+import {decode} from 'file2html/lib/text-encoding';
 import {parseXML} from 'file2html-xml-tools/lib/sax';
 
 interface HTMLTags {
@@ -69,7 +69,7 @@ export default class FictionBookReader extends file2html.Reader {
             contentType: string;
         };
 
-        parseXML(bytesToString(fileContent), {
+        parseXML(decode(fileContent), {
             onopentag (tagName: string, attributes: {[key: string]: string}) {
                 switch (tagName) {
                     case 'document-info':
