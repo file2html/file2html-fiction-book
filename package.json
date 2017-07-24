@@ -1,9 +1,13 @@
 {
   "name": "file2html-fiction-book",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "FictionBook engine for file2html",
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
+  "files": [
+    "lib/*.*",
+    "lib/**/*.*"
+  ],
   "scripts": {
     "test": "./node_modules/.bin/jest --no-cache --config=./node_modules/file2html-dev-tools/jest/config.json",
     "lint": "./node_modules/.bin/tslint \"src/**/*.ts\" \"test/unit/**/*.ts\"",
