@@ -10,11 +10,11 @@
     "build": "npm run lint && rm -rf lib && ./node_modules/.bin/tsc"
   },
   "dependencies": {
-    "file2html": "git@github.com:file2html/file2html.git",
-    "file2html-xml-tools": "git@github.com:file2html/file2html-xml-tools.git"
+    "file2html": "^0.1.5",
+    "file2html-xml-tools": "git+https://github.com/file2html/file2html-xml-tools.git#v1.0.0"
   },
   "devDependencies": {
-    "file2html-dev-tools": "git@github.com:file2html/file2html-dev-tools.git"
+    "file2html-dev-tools": "git+https://github.com/file2html/file2html-dev-tools.git#v1.0.0"
   },
   "repository": {
     "type": "git",
