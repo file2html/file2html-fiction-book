@@ -1,192 +1,67 @@
 import * as file2html from 'file2html';
-import {decode} from 'file2html/lib/text-encoding';
-import {parseXML} from 'file2html-xml-tools/lib/sax';
+import {lookup} from 'file2html/lib/mime';
+import {errorsNamespace} from 'file2html/lib/errors';
+import {Archive, readArchive} from 'file2html-archive-tools';
+import {parseDocumentContent} from './parse-document-content';
 
-interface HTMLTags {
-    [key: string]: string;
-}
-
-const supportedMimeTypes: string[] = ['application/x-fictionbook+xml'];
+const compressedFictionBook2MimeType: string = lookup('.fb2.zip');
+const fictionBookMimeTypes: string[] = [
+    lookup('.fb2'),
+    lookup('.fb')
+];
+const supportedMimeTypes: string[] = [compressedFictionBook2MimeType].concat(fictionBookMimeTypes);
 
 export default class FictionBookReader extends file2html.Reader {
     read ({fileInfo}: file2html.ReaderParams) {
         const fileContent: Uint8Array = fileInfo.content;
-        const {byteLength} = fileContent;
-        const meta: file2html.FileMetaInformation = Object.assign({
-            fileType: file2html.FileTypes.document,
-            mimeType: '',
-            name: '',
-            size: byteLength,
-            creator: '',
-            createdAt: '',
-            modifiedAt: ''
-        }, fileInfo.meta);
-        let content: string = '';
-        let isDocumentInfo: boolean;
-        let isAuthorTag: boolean;
-        let isContent: boolean;
-        let isTextContentEnabled: boolean;
-        const openedHTMLTags: HTMLTags = {
-            a: '<a',
-            p: '<p',
-            section: '<section',
-            epigraph: '<div',
-            poem: '<div',
-            stanza: '<div',
-            v: '<div',
-            cite: '<cite',
-            title: '<header',
-            image: '<img'
-        };
-        const unfinishedTagEnding: string = '>';
-        const closedHTMLTags: HTMLTags = {
-            a: '</a>',
-            p: '</p>',
-            section: '</section>',
-            epigraph: '</div>',
-            poem: '</div>',
-            stanza: '</div>',
-            v: '</div>',
-            cite: '</cite>',
-            title: '</header>'
-        };
-        const textContentTags: string[] = [
-            'a',
-            'p',
-            'v'
-        ];
-        const contentTags: string[] = textContentTags.concat([
-            'section',
-            'epigraph',
-            'poem',
-            'stanza',
-            'cite',
-            'title'
-        ]);
-        const imageTagEndIndices: {[key: string]: number} = {};
-        let imageTagSource: {
-            endIndex: number;
-            contentType: string;
-        };
+        let promise: Promise<Uint8Array>;
 
-        parseXML(decode(fileContent), {
-            onopentag (tagName: string, attributes: {[key: string]: string}) {
-                switch (tagName) {
-                    case 'document-info':
-                        isDocumentInfo = true;
+        if (fileInfo.meta.mimeType === compressedFictionBook2MimeType) {
+            promise = readArchive(fileContent).then((archive: Archive) => {
+                let fictionBookPath: string;
+                const {files = {}} = archive;
+
+                for (const path in files) {
+                    if (files.hasOwnProperty(path) && fictionBookMimeTypes.indexOf(lookup(path)) >= 0) {
+                        fictionBookPath = path;
                         break;
-                    case 'date':
-                        if (isDocumentInfo) {
-                            const {value} = attributes;
-
-                            if (value) {
-                                meta.createdAt = value;
-                            }
-                        }
-                        break;
-                    case 'nickname':
-                        if (isDocumentInfo) {
-                            isAuthorTag = true;
-                        }
-                        break;
-                    case 'body':
-                        isContent = true;
-                        break;
-                    case 'image':
-                        const href: string = attributes['xlink:href'];
-
-                        if (isContent && href) {
-                            content += openedHTMLTags.image;
-                            imageTagEndIndices[href.replace('#', '')] = content.length;
-                            content += `/${ unfinishedTagEnding }`;
-                        }
-                        break;
-                    case 'binary':
-                        const id: string = attributes['id'];
-                        const contentType: string = attributes['content-type'];
-                        const imageTagEndIndex: number = imageTagEndIndices[id];
-
-                        if (imageTagEndIndex && contentType) {
-                            imageTagSource = {
-                                endIndex: imageTagEndIndex,
-                                contentType
-                            };
-                        }
-                        break;
-                    case 'empty-line':
-                         if (isContent) {
-                             content += '<br/>';
-                         }
-                        break;
-                    default:
-                        if (isContent && contentTags.indexOf(tagName) >= 0) {
-                            content += `${ openedHTMLTags[tagName] } class="${ tagName }"`;
-                            isTextContentEnabled = textContentTags.indexOf(tagName) >= 0;
-
-                            if (tagName === 'a') {
-                                const href: string = attributes['xlink:href'];
-
-                                if (href) {
-                                    content += ` href="${ href }"`;
-                                }
-
-                                content += unfinishedTagEnding;
-                            } else if (tagName === 'section') {
-                                const {id} = attributes;
-
-                                content += unfinishedTagEnding;
-
-                                if (id) {
-                                    // add anchor: <a name=""></a>
-                                    content += `${ openedHTMLTags.a } name="${ id }"${ unfinishedTagEnding }`;
-                                    content += closedHTMLTags.a;
-                                }
-                            } else {
-                                content += unfinishedTagEnding;
-                            }
-                        }
+                    }
                 }
-            },
-            onclosetag (tagName: string) {
-                switch (tagName) {
-                    case 'document-info':
-                        isDocumentInfo = false;
-                        break;
-                    case 'nickname':
-                        if (isDocumentInfo) {
-                            isAuthorTag = false;
-                        }
-                        break;
-                    case 'body':
-                        isContent = false;
-                        break;
-                    default:
-                        if (isContent && contentTags.indexOf(tagName) >= 0) {
-                            content += closedHTMLTags[tagName];
-                            isTextContentEnabled = false;
-                        }
-                }
-            },
-            ontext (textContent: string) {
-                if (isAuthorTag) {
-                    meta.creator += textContent;
-                } else if (imageTagSource) {
-                    const {endIndex} = imageTagSource;
-                    const src: string = `data:${ imageTagSource.contentType };base64,${ textContent.trim() }`;
 
-                    content = `${ content.slice(0, endIndex) } src="${ src }"${ content.slice(endIndex) }`;
-                    imageTagSource = undefined;
-                } else if (isTextContentEnabled) {
-                    content += textContent;
+                if (!fictionBookPath) {
+                    const archiveTree: string = Object.keys(files).join(',\n');
+
+                    return Promise.reject(new Error(
+                        `${ errorsNamespace }.invalidFile. Archive: [${ archiveTree }]`
+                    )) as any;
                 }
-            }
+
+                return archive.file(fictionBookPath).async('uint8array');
+            });
+        } else {
+            promise = Promise.resolve(fileContent);
+        }
+
+        return promise.then((fileContent: Uint8Array) => {
+            const {byteLength} = fileContent;
+            const meta: file2html.FileMetaInformation = Object.assign({
+                fileType: file2html.FileTypes.document,
+                mimeType: '',
+                name: '',
+                size: byteLength,
+                creator: '',
+                createdAt: '',
+                modifiedAt: ''
+            }, fileInfo.meta);
+
+            return parseDocumentContent(fileContent, meta).then(({styles, content}) => {
+                return new file2html.File({
+                    meta,
+                    styles,
+                    content
+                });
+            });
         });
-
-        return Promise.resolve(new file2html.File({
-            meta,
-            styles: '<style></style>',
-            content: `<div>${ content }</div>`
-        }));
     }
 
     static testFileMimeType (mimeType: string) {
