@@ -113,10 +113,11 @@ export function parseDocumentContent (fileContent: Uint8Array, meta: FileMetaInf
                         isTextContentEnabled = textContentTags.indexOf(tagName) >= 0;
 
                         if (tagName === 'a') {
-                            const href: string = attributes['xlink:href'];
-
-                            if (href) {
-                                content += ` href="${ href }"`;
+                            for (const key in attributes) {
+                                if (attributes.hasOwnProperty(key) && key.split(':')[1] === 'href') {
+                                    content += ` href="${ attributes[key] }"`;
+                                    break;
+                                }
                             }
 
                             content += unfinishedTagEnding;
