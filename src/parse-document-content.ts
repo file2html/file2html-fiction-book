@@ -52,9 +52,8 @@ export function parseDocumentContent (fileContent: Uint8Array, meta: FileMetaInf
         'cite',
         'title'
     ]);
-    const imageTagEndIndices: {[key: string]: number} = {};
     let imageTagSource: {
-        endIndex: number;
+        id: string;
         contentType: string;
     };
 
@@ -82,24 +81,25 @@ export function parseDocumentContent (fileContent: Uint8Array, meta: FileMetaInf
                     isContent = true;
                     break;
                 case 'image':
-                    const href: string = attributes['xlink:href'];
+                    let href: string|undefined;
+
+                    for (const key in attributes) {
+                        if (attributes.hasOwnProperty(key) && key.split(':')[1] === 'href') {
+                            href = attributes[key];
+                            break;
+                        }
+                    }
 
                     if (isContent && href) {
-                        content += openedHTMLTags.image;
-                        imageTagEndIndices[href.replace('#', '')] = content.length;
-                        content += `/${ unfinishedTagEnding }`;
+                        content += openedHTMLTags.image + ' src="' + href + '"/' + unfinishedTagEnding;
                     }
                     break;
                 case 'binary':
-                    const id: string = attributes['id'];
-                    const contentType: string = attributes['content-type'];
-                    const imageTagEndIndex: number = imageTagEndIndices[id];
+                    const id: string|undefined = attributes['id'];
+                    const contentType: string|undefined = attributes['content-type'];
 
-                    if (imageTagEndIndex && contentType) {
-                        imageTagSource = {
-                            endIndex: imageTagEndIndex,
-                            contentType
-                        };
+                    if (id && contentType) {
+                        imageTagSource = {id, contentType};
                     }
                     break;
                 case 'empty-line':
@@ -160,10 +160,10 @@ export function parseDocumentContent (fileContent: Uint8Array, meta: FileMetaInf
             if (isAuthorTag) {
                 meta.creator += textContent;
             } else if (imageTagSource) {
-                const {endIndex} = imageTagSource;
-                const src: string = `data:${ imageTagSource.contentType };base64,${ textContent.trim() }`;
-
-                content = `${ content.slice(0, endIndex) } src="${ src }"${ content.slice(endIndex) }`;
+                content = content.replace(
+                    new RegExp(`src="#${ imageTagSource.id }"`, 'g'),
+                    `src="data:${ imageTagSource.contentType };base64,${ textContent.trim() }"`
+                );
                 imageTagSource = undefined;
             } else if (isTextContentEnabled) {
                 content += textContent;
