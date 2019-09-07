@@ -57,7 +57,20 @@ export function parseDocumentContent (fileContent: Uint8Array, meta: FileMetaInf
         contentType: string;
     };
 
-    parseXML(decode(fileContent), {
+    /**
+     * @description <?xml ...> content
+     * @type {string}
+     */
+    const fileHeader: string = decode(fileContent.slice(0, 50));
+
+    /**
+     * @description Get encoding value stored in attribute
+     * @example <?xml version="1.0" encoding="windows-1251"?>, <?xml version="1.0" encoding="utf-8"?>
+     * @type {Array<string|undefined>}
+     */
+    const [, encoding]: (string|undefined)[] = /encoding="([^"]+)"/.exec(fileHeader) || [];
+
+    parseXML(decode(fileContent, encoding && encoding.trim()), {
         onopentag (tagName: string, attributes: {[key: string]: string}) {
             switch (tagName) {
                 case 'document-info':
