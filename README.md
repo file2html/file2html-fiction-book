@@ -1,5 +1,5 @@
 # file2html-fiction-book
-[![Build Status](https://secure.travis-ci.org/file2html/file2html-fiction-book.png?branch=master)](https://travis-ci.org/file2html/file2html-fiction-book)
+[![Build Status](https://travis-ci.org/file2html/file2html-fiction-book.svg?branch=master)](https://travis-ci.org/file2html/file2html-fiction-book)
 [![npm](https://img.shields.io/npm/dm/file2html-fiction-book.svg)](https://www.npmjs.com/package/file2html-fiction-book)
 [![npm](https://img.shields.io/npm/v/file2html-fiction-book.svg)](https://www.npmjs.com/package/file2html-fiction-book)
 [![npm](https://img.shields.io/npm/l/file2html-fiction-book.svg)](https://www.npmjs.com/package/file2html-fiction-book)
