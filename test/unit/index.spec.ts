@@ -26,7 +26,7 @@ describe('FictionBook', () => {
                     mimeType: '',
                     modifiedAt: '',
                     name: '',
-                    size: 37837
+                    size: 37923
                 });
                 const {styles, content} = file.getData();
 
@@ -57,9 +57,10 @@ describe('FictionBook', () => {
                     header: 28,
                     img: 1,
                     p: 60,
-                    section: 26
+                    section: 26,
+                    h6: 2
                 });
-                expect(styles).toBe('<style></style>');
+                expect(styles).toMatchSnapshot('styles');
             });
         });
     });

@@ -25,7 +25,8 @@ export function parseDocumentContent (fileContent: Uint8Array, meta: FileMetaInf
         v: '<div',
         cite: '<cite',
         title: '<header',
-        image: '<img'
+        image: '<img',
+        subtitle: '<h6'
     };
     const unfinishedTagEnding: string = '>';
     const closedHTMLTags: HTMLTags = {
@@ -37,12 +38,14 @@ export function parseDocumentContent (fileContent: Uint8Array, meta: FileMetaInf
         stanza: '</div>',
         v: '</div>',
         cite: '</cite>',
-        title: '</header>'
+        title: '</header>',
+        subtitle: '</h6>'
     };
     const textContentTags: string[] = [
         'a',
         'p',
-        'v'
+        'v',
+        'subtitle'
     ];
     const contentTags: string[] = textContentTags.concat([
         'section',
@@ -186,7 +189,11 @@ export function parseDocumentContent (fileContent: Uint8Array, meta: FileMetaInf
     });
 
     return Promise.resolve({
-        styles: '<style></style>',
+        styles: `
+            <style>
+                .subtitle {text-align: center}
+            </style>
+        `,
         content: `<div>${ content }</div>`
     });
 }
